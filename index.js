@@ -18,6 +18,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run(){
 try{
 const postsColletion = client.db('heroJobTask').collection('posts')
+const userColletion = client.db('heroJobTask').collection('users')
 
 app.post('/posts',async(req,res)=>{
     const post = req.body;
@@ -37,6 +38,59 @@ app.get('/posts/:id',async(req,res)=>{
     const query = {_id:ObjectId(id)}
     const result = await postsColletion.findOne(query)
     res.send(result);
+})
+
+app.put('/posts/:id',async(req,res)=>{
+    const id = req.params.id;
+    console.log(id)
+    console.log(req.body)
+    
+    const filter= {_id:ObjectId(id)}
+    const options = { upsert: true };
+    const comment = {
+        $push:{
+            comment:req.body.comment          
+         }
+    }
+    console.log(comment)
+    const result = await postsColletion.updateOne(filter,comment,options)
+    res.send(result)
+})
+
+/*======================
+ user collection api
+ =======================*/
+
+app.post('/users',async(req,res)=>{
+    const users = req.body;
+    const result = await userColletion.insertOne(users);
+    res.send(result)
+})
+
+app.get('/users',async(req,res)=>{
+    const email = req.query.email;    
+    const query = {email:email}
+    const result = await userColletion.findOne(query)
+    res.send(result);
+})
+
+
+// udate user info
+app.put('/users/:id',async(req,res)=>{
+    const id = req.params.id;
+    const filter= {_id:ObjectId(id)}
+    const options = { upsert: true };
+    const updatedUser = {
+        $set:{
+            address:req.body.address,
+            university:req.body.university,
+            name:req.body.name,
+            email:req.body.email
+         }
+    }
+    console.log(updatedUser)
+    const result = await userColletion.updateOne(filter,updatedUser,options)
+    res.send(result)
 })
 
 }
