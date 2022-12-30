@@ -3,13 +3,11 @@ const cors = require('cors')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const port = process.env.PORT || 5000
-
 const app = express();
 
 
 app.use(cors())
 app.use(express.json())
-
 
 
 const uri = `mongodb+srv://${process.env.DB_user}:${process.env.DB_password}@cluster0.4jfewjr.mongodb.net/?retryWrites=true&w=majority`;
@@ -40,22 +38,48 @@ app.get('/posts/:id',async(req,res)=>{
     res.send(result);
 })
 
+// comment api
 app.put('/posts/:id',async(req,res)=>{
-    const id = req.params.id;
-    console.log(id)
-    console.log(req.body)
-    
+    const id = req.params.id;    
     const filter= {_id:ObjectId(id)}
     const options = { upsert: true };
     const comment = {
         $push:{
             comment:req.body.comment          
          }
-    }
-    console.log(comment)
+    }   
     const result = await postsColletion.updateOne(filter,comment,options)
     res.send(result)
 })
+
+// like api
+app.put('/likes/:id',async(req,res)=>{
+    const id = req.params.id;    
+    const filter= {_id:ObjectId(id)}
+    const options = { upsert: true };
+    const like = {
+        $push:{
+            likes:req.body.like          
+         }
+    }   
+    const result = await postsColletion.updateOne(filter,like,options)
+    res.send(result)
+})
+/*
+get biggest like object
+*/
+app.get('/likePosts',async(req,res)=>{      
+    const posts = await postsColletion.aggregate( [
+             { $project: { 'descip':1, 'postImg':1, 'comment':1,'likes':1} },
+            { $sort : { 'likes' : -1 }} ,
+             {$limit : 3} ,          
+      
+      ] ).toArray()
+    res.send(posts)
+})
+
+// get most like post details
+
 
 /*======================
  user collection api
@@ -88,7 +112,7 @@ app.put('/users/:id',async(req,res)=>{
             email:req.body.email
          }
     }
-    console.log(updatedUser)
+    
     const result = await userColletion.updateOne(filter,updatedUser,options)
     res.send(result)
 })
