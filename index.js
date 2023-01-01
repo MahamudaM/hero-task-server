@@ -66,46 +66,25 @@ app.put('/likes/:id',async(req,res)=>{
     res.send(result)
 })
 /*
-get biggest like object
-aggregate( [
-  { $unwind : "$l" },
-  { $group : { _id : "$_id", len : { $sum : 1 } } },
-  { $sort : { len : -1 } },
-  { $limit : 25 }
-] )
-
- { $project: { 'descip':1, 'postImg':1, 'comment':1,'likes':1} },
-            { $sort : { 'likes' : -1 }} ,
-             {$limit : 3} , 
-             
-             descip,postImg,_id,comment,likes ,descip : "$descip",postImg : "$postImg", 
+// get most like post details
+ 
 */
 app.get('/likePosts',async(req,res)=>{      
     const posts = await postsColletion.aggregate( [
        { $unwind : "$likes" }, 
-  { $group : { _id : {descip : "$descip",postImg : "$postImg",}, len : { $sum : 1} } },
-  { $sort : { len : -1 } },
+  { $group : { _id: {descip : "$descip",postImg : "$postImg",_id:'$_id'}, len : { $sum : 1} } },
+   { $sort : { len : -1 } },
   { $limit :3 } ,          
      
       ] ).toArray()
     res.send(posts)
 })
 
-// get most like post details
-
 
 /*======================
  user collection api
  =======================*/
-/*
-query = req.body.email
-doesExist = await userCollection.findOne(query)
-If !doesExist
-userCollection.insertOne(user)
-return res.json({msg})
-else
-res.json({existmsg})
- */
+
 app.post('/users',async(req,res)=>{
     const users = req.body;
     const result = await userColletion.insertOne(users);
